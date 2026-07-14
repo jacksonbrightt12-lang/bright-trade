@@ -30,12 +30,40 @@ async function bootstrap() {
             socket.on("subscribe:markets", () => {
                 socket.join("markets");
             });
+            socket.on("subscribe:candles", ({ symbol, timeframe }) => {
+                const normalized = String(symbol ?? "").replace("/", "");
+                if (normalized && timeframe) {
+                    socket.join(`candles:${normalized}:${timeframe}`);
+                }
+            });
+            socket.on("unsubscribe:candles", ({ symbol, timeframe }) => {
+                const normalized = String(symbol ?? "").replace("/", "");
+                if (normalized && timeframe) {
+                    socket.leave(`candles:${normalized}:${timeframe}`);
+                }
+            });
             socket.on("disconnect", () => {
                 console.log("Client disconnected:", socket.id);
             });
         });
-        (0, priceEngine_1.startPriceEngine)((updates) => {
+        (0, priceEngine_1.startPriceEngine)(async (updates) => {
             io.to("markets").emit("prices:update", updates);
+            const rooms = io.of("/").adapter.rooms;
+            for (const room of rooms.keys()) {
+                if (!room.startsWith("candles:"))
+                    continue;
+                const parts = room.split(":");
+                if (parts.length !== 3)
+                    continue;
+                const [, symbol, timeframe] = parts;
+                const update = updates.find((u) => u.symbol === symbol);
+                if (!update)
+                    continue;
+                const liveCandle = await (0, priceEngine_1.getLiveCandleUpdate)(symbol, timeframe, update.bid);
+                if (!liveCandle)
+                    continue;
+                io.to(room).emit("candles:update", liveCandle);
+            }
         });
         httpServer.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

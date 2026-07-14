@@ -4,6 +4,7 @@ exports.INSTRUMENT_CONFIG = void 0;
 exports.ensureInstruments = ensureInstruments;
 exports.updateMarketPrices = updateMarketPrices;
 exports.startPriceEngine = startPriceEngine;
+exports.getLiveCandleUpdate = getLiveCandleUpdate;
 exports.getQuoteForSymbol = getQuoteForSymbol;
 exports.calculatePnL = calculatePnL;
 exports.generateCandles = generateCandles;
@@ -21,6 +22,7 @@ exports.INSTRUMENT_CONFIG = [
     { symbol: "US30", name: "Dow Jones Index", category: "INDICES", base: "US", quote: "USD", staticPrice: 39100 },
 ];
 const previousPrices = new Map();
+const liveCandleCache = new Map();
 let priceEngineRunning = false;
 const YAHOO_SYMBOL_MAP = {
     EURUSD: "EURUSD=X",
@@ -248,6 +250,120 @@ async function fetchYahooCandles(symbol, timeframe, limit) {
     catch {
         return null;
     }
+}
+function timeframeToMs(timeframe) {
+    switch (timeframe) {
+        case 'M1':
+            return 60_000;
+        case 'M5':
+            return 5 * 60_000;
+        case 'M15':
+            return 15 * 60_000;
+        case 'M30':
+            return 30 * 60_000;
+        case 'H1':
+            return 60 * 60_000;
+        case 'H4':
+            return 4 * 60 * 60_000;
+        case 'D1':
+            return 24 * 60 * 60_000;
+        default:
+            return 30 * 60_000;
+    }
+}
+function getCurrentCandleTimestamp(timeframe, now = Date.now()) {
+    const duration = timeframeToMs(timeframe);
+    return Math.floor(now / duration) * duration;
+}
+function normalizeSymbol(symbol) {
+    return symbol.replace('/', '');
+}
+function mapToCandleUpdate(symbol, timeframe, candle) {
+    return {
+        symbol: normalizeSymbol(symbol),
+        timeframe,
+        timestamp: candle.timestamp.valueOf(),
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+        volume: candle.volume,
+    };
+}
+function updateCandleForPrice(candle, price, currentTimestamp) {
+    if (candle.timestamp !== currentTimestamp) {
+        return {
+            ...candle,
+            timestamp: currentTimestamp,
+            open: candle.close,
+            high: Math.max(candle.close, price),
+            low: Math.min(candle.close, price),
+            close: price,
+        };
+    }
+    return {
+        ...candle,
+        high: Math.max(candle.high, price),
+        low: Math.min(candle.low, price),
+        close: price,
+    };
+}
+async function loadLatestCandle(symbol, timeframe) {
+    const normalized = normalizeSymbol(symbol);
+    const instrument = await prisma_1.prisma.instrument.findUnique({
+        where: { symbol: normalized },
+        include: { quoteData: true },
+    });
+    if (!instrument?.quoteData)
+        return null;
+    const yahooCandles = await fetchYahooCandles(normalized, timeframe, 1);
+    if (yahooCandles && yahooCandles.length > 0) {
+        return mapToCandleUpdate(normalized, timeframe, yahooCandles[yahooCandles.length - 1]);
+    }
+    const existing = await prisma_1.prisma.candle.findFirst({
+        where: { instrumentId: instrument.id },
+        orderBy: { timestamp: 'desc' },
+    });
+    if (existing) {
+        return {
+            symbol: normalized,
+            timeframe,
+            timestamp: existing.timestamp.valueOf(),
+            open: Number(existing.open),
+            high: Number(existing.high),
+            low: Number(existing.low),
+            close: Number(existing.close),
+            volume: Number(existing.volume),
+        };
+    }
+    const mid = Number(instrument.quoteData.bid);
+    return {
+        symbol: normalized,
+        timeframe,
+        timestamp: getCurrentCandleTimestamp(timeframe),
+        open: mid,
+        high: mid,
+        low: mid,
+        close: mid,
+        volume: 0,
+    };
+}
+async function getLiveCandleUpdate(symbol, timeframe, currentPrice) {
+    const normalized = normalizeSymbol(symbol);
+    const roomKey = `${normalized}:${timeframe}`;
+    const currentTimestamp = getCurrentCandleTimestamp(timeframe);
+    const cached = liveCandleCache.get(roomKey);
+    if (cached && cached.timestamp === currentTimestamp) {
+        const updated = updateCandleForPrice(cached, currentPrice, currentTimestamp);
+        liveCandleCache.set(roomKey, updated);
+        return updated;
+    }
+    const candle = await loadLatestCandle(normalized, timeframe);
+    if (!candle)
+        return null;
+    const updated = updateCandleForPrice(candle, currentPrice, currentTimestamp);
+    liveCandleCache.set(roomKey, updated);
+    return updated;
 }
 async function getQuoteForSymbol(symbol) {
     return prisma_1.prisma.instrument.findUnique({
