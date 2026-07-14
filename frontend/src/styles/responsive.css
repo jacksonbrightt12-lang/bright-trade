@@ -1,0 +1,116 @@
+/* Global responsive enhancements */
+
+.page-shell {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.content-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.content-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(0, 208, 132, 0.25);
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  min-width: 600px;
+}
+
+@media (max-width: 1200px) {
+  .content-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .content-grid-2,
+  .content-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .market-watch-page,
+  .trading-page,
+  .page-container {
+    padding: 12px !important;
+  }
+
+  .market-watch-card,
+  .trading-card,
+  .history-card,
+  .fund-card {
+    border-radius: 16px !important;
+    padding: 16px !important;
+  }
+
+  .market-row,
+  .position-card,
+  .tx-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .market-row-right {
+    align-items: flex-start !important;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-buy,
+  .btn-sell {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-watch-tabs,
+  .positions-tabs,
+  .history-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .market-tab,
+  .tab-btn,
+  .tab {
+    flex-shrink: 0;
+  }
+}
