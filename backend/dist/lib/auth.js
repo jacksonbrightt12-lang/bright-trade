@@ -12,7 +12,7 @@ exports.generateReferralCode = generateReferralCode;
 exports.generateVerificationCode = generateVerificationCode;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const JWT_SECRET = process.env.JWT_SECRET || "brighttrade-dev-secret";
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 async function hashPassword(password) {
     return bcrypt_1.default.hash(password, 12);
