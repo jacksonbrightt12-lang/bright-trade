@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const client_1 = require("@prisma/client/runtime/client");
 const prisma_1 = require("../lib/prisma");
 const auth_1 = require("../middleware/auth");
 const auth_2 = require("../lib/auth");
@@ -255,7 +256,7 @@ router.post('/accounts', auth_1.requireAuth, auth_1.requireAdmin, async (req, re
             return;
         }
         const account = await prisma_1.prisma.account.create({
-            data: { userId, type: type, balance: balance, currency },
+            data: { userId, type: type, balance: new client_1.Decimal(balance), currency },
         });
         res.status(201).json({ account: { id: account.id, type: account.type, balance: Number(account.balance), currency: account.currency, user: { id: user.id, fullName: user.fullName } } });
     }

@@ -31,7 +31,7 @@ router.get("/", async (_req, res) => {
     });
 });
 router.get("/:symbol", async (req, res) => {
-    const symbol = req.params.symbol.replace("/", "");
+    const symbol = String(req.params.symbol).replace("/", "");
     const instrument = await prisma_1.prisma.instrument.findUnique({
         where: { symbol },
         include: { quoteData: true },
@@ -56,7 +56,7 @@ router.get("/:symbol", async (req, res) => {
     });
 });
 router.get("/:symbol/candles", async (req, res) => {
-    const symbol = req.params.symbol.replace("/", "");
+    const symbol = String(req.params.symbol).replace("/", "");
     const limit = Number(req.query.limit) || 50;
     const interval = String(req.query.interval ?? 'M30');
     const candles = await (0, priceEngine_1.generateCandles)(symbol, limit, interval);

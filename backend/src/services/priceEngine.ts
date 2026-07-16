@@ -66,7 +66,7 @@ async function fetchYahooQuote(symbol: string): Promise<{ bid: number; ask: numb
   try {
     const res = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${yahooSymbol}`);
     if (!res.ok) return null;
-    const data = await res.json();
+    const data = await res.json() as { quoteResponse?: { result?: Array<{ regularMarketPrice?: number; bid?: number; ask?: number; regularMarketChangePercent?: number }> } };
     const quote = data?.quoteResponse?.result?.[0];
     if (!quote) return null;
 
@@ -262,7 +262,14 @@ async function fetchYahooCandles(symbol: string, timeframe: string, limit: numbe
       `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${interval}&range=${range}`
     );
     if (!res.ok) return null;
-    const data = await res.json();
+    const data = await res.json() as {
+      chart?: {
+        result?: Array<{
+          timestamp?: number[];
+          indicators?: { quote?: Array<{ open?: (number | null)[]; high?: (number | null)[]; low?: (number | null)[]; close?: (number | null)[]; volume?: (number | null)[] }> };
+        }>;
+      };
+    };
     const quote = data?.chart?.result?.[0];
     if (!quote || !quote.timestamp || !quote.indicators?.quote?.[0]) return null;
 

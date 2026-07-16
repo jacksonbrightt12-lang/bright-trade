@@ -1,11 +1,11 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { prisma } from "../lib/prisma";
 import type { AuthRequest } from "../middleware/auth";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", requireAuth, async (req: AuthRequest, res) => {
+router.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
   const tickets = await prisma.supportTicket.findMany({
     where: { userId: req.user!.id },
     orderBy: { createdAt: "desc" },
@@ -22,7 +22,7 @@ router.get("/", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.post("/", requireAuth, async (req: AuthRequest, res) => {
+router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
   const { subject, message } = req.body as { subject?: string; message?: string };
   if (!subject || !message) {
     res.status(400).json({ error: "Subject and message are required" });

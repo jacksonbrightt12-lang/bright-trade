@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { prisma } from "../lib/prisma";
 import {
   comparePassword,
@@ -12,7 +12,7 @@ import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", async (req: Request, res: Response) => {
   try {
     const { fullName, email, phone, password, referralCode } = req.body as {
       fullName?: string;
@@ -75,7 +75,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/verify-email", async (req, res) => {
+router.post("/verify-email", async (req: Request, res: Response) => {
   try {
     const { email, code } = req.body as { email?: string; code?: string };
     if (!email || !code) {
@@ -127,7 +127,7 @@ router.post("/verify-email", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body as { email?: string; password?: string };
     if (!email || !password) {

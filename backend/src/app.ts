@@ -19,11 +19,11 @@ app.use(
 );
 app.use(express.json());
 
-app.get("/", (_req, res) => {
+app.get("/", (_req: express.Request, res: express.Response) => {
   res.json({ message: "Bright Trade API is running" });
 });
 
-app.get("/api/health", (_req, res) => {
+app.get("/api/health", (_req: express.Request, res: express.Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 

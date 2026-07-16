@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { Decimal } from "@prisma/client/runtime/client";
 import { prisma } from "../lib/prisma";
 import { calculatePnL } from "../services/priceEngine";
@@ -62,7 +62,7 @@ async function computeAccountStats(accountId: string) {
   };
 }
 
-router.get("/summary", requireAuth, async (req: AuthRequest, res) => {
+router.get("/summary", requireAuth, async (req: AuthRequest, res: Response) => {
   const accountType = (req.query.accountType as string) || "DEMO";
   const account = await getUserAccount(req.user!.id, accountType);
   if (!account) {
@@ -127,7 +127,7 @@ router.get("/summary", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.get("/accounts", requireAuth, async (req: AuthRequest, res) => {
+router.get("/accounts", requireAuth, async (req: AuthRequest, res: Response) => {
   const accounts = await prisma.account.findMany({
     where: { userId: req.user!.id },
     select: { id: true, type: true, balance: true, currency: true },
@@ -140,7 +140,7 @@ router.get("/accounts", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.post("/deposit", requireAuth, async (req: AuthRequest, res) => {
+router.post("/deposit", requireAuth, async (req: AuthRequest, res: Response) => {
   const { amount, method, accountType = "DEMO" } = req.body as {
     amount?: number;
     method?: string;
@@ -186,7 +186,7 @@ router.post("/deposit", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.post("/withdraw", requireAuth, async (req: AuthRequest, res) => {
+router.post("/withdraw", requireAuth, async (req: AuthRequest, res: Response) => {
   const { amount, method, accountType = "DEMO" } = req.body as {
     amount?: number;
     method?: string;
@@ -237,7 +237,7 @@ router.post("/withdraw", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.get("/transactions", requireAuth, async (req: AuthRequest, res) => {
+router.get("/transactions", requireAuth, async (req: AuthRequest, res: Response) => {
   const accountType = (req.query.accountType as string) || "DEMO";
   const type = req.query.type as string | undefined;
   const account = await getUserAccount(req.user!.id, accountType);

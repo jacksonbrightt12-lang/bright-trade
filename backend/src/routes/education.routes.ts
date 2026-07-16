@@ -1,11 +1,11 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { prisma } from "../lib/prisma";
 import type { AuthRequest } from "../middleware/auth";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", async (_req, res) => {
+router.get("/", async (_req: Request, res: Response) => {
   const courses = await prisma.educationCourse.findMany({ orderBy: { createdAt: "asc" } });
   res.json({
     courses: courses.map((c) => ({
@@ -26,7 +26,7 @@ router.get("/", async (_req, res) => {
   });
 });
 
-router.post("/", requireAuth, requireAdmin, async (req: AuthRequest, res) => {
+router.post("/", requireAuth, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const {
       title,
@@ -98,7 +98,7 @@ router.post("/", requireAuth, requireAdmin, async (req: AuthRequest, res) => {
   }
 });
 
-router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/:id', requireAuth, requireAdmin, async (req: AuthRequest, res: Response) => {
   const id = typeof req.params.id === 'string' ? req.params.id : req.params.id[0];
   try {
     await prisma.educationCourse.delete({ where: { id } });

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { prisma } from "../lib/prisma";
 import { generateCandles } from "../services/priceEngine";
 
@@ -10,7 +10,7 @@ function formatSymbol(symbol: string): string {
   return symbol;
 }
 
-router.get("/", async (_req, res) => {
+router.get("/", async (_req: Request, res: Response) => {
   const instruments = await prisma.instrument.findMany({
     include: { quoteData: true },
     orderBy: { symbol: "asc" },
@@ -31,8 +31,8 @@ router.get("/", async (_req, res) => {
   });
 });
 
-router.get("/:symbol", async (req, res) => {
-  const symbol = req.params.symbol.replace("/", "");
+router.get("/:symbol", async (req: Request, res: Response) => {
+  const symbol = String(req.params.symbol).replace("/", "");
   const instrument = await prisma.instrument.findUnique({
     where: { symbol },
     include: { quoteData: true },
@@ -59,8 +59,8 @@ router.get("/:symbol", async (req, res) => {
   });
 });
 
-router.get("/:symbol/candles", async (req, res) => {
-  const symbol = req.params.symbol.replace("/", "");
+router.get("/:symbol/candles", async (req: Request, res: Response) => {
+  const symbol = String(req.params.symbol).replace("/", "");
   const limit = Number(req.query.limit) || 50;
   const interval = String(req.query.interval ?? 'M30');
   const candles = await generateCandles(symbol, limit, interval);

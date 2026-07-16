@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { Decimal } from "@prisma/client/runtime/client";
 import { prisma } from "../lib/prisma";
 import { calculatePnL, getQuoteForSymbol } from "../services/priceEngine";
@@ -13,7 +13,7 @@ async function getAccount(userId: string, accountType = "DEMO") {
   });
 }
 
-router.get("/positions", requireAuth, async (req: AuthRequest, res) => {
+router.get("/positions", requireAuth, async (req: AuthRequest, res: Response) => {
   const accountType = (req.query.accountType as string) || "DEMO";
   const status = (req.query.status as string) || "OPEN";
   const account = await getAccount(req.user!.id, accountType);
@@ -62,7 +62,7 @@ router.get("/positions", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.get("/orders", requireAuth, async (req: AuthRequest, res) => {
+router.get("/orders", requireAuth, async (req: AuthRequest, res: Response) => {
   const accountType = (req.query.accountType as string) || "DEMO";
   const account = await getAccount(req.user!.id, accountType);
   if (!account) {
@@ -90,7 +90,7 @@ router.get("/orders", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.post("/open", requireAuth, async (req: AuthRequest, res) => {
+router.post("/open", requireAuth, async (req: AuthRequest, res: Response) => {
   const {
     symbol,
     type,
@@ -204,7 +204,7 @@ router.post("/open", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.post("/positions/:id/close", requireAuth, async (req: AuthRequest, res) => {
+router.post("/positions/:id/close", requireAuth, async (req: AuthRequest, res: Response) => {
   const accountType = (req.body.accountType as string) || "DEMO";
   const positionId = String(req.params.id);
   const account = await getAccount(req.user!.id, accountType);

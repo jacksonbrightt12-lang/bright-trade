@@ -1,4 +1,5 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
+import { Decimal } from "@prisma/client/runtime/client";
 import { prisma } from "../lib/prisma";
 import type { AuthRequest } from "../middleware/auth";
 import { requireAuth, requireAdmin } from "../middleware/auth";
@@ -6,7 +7,7 @@ import { hashPassword, generateReferralCode } from "../lib/auth";
 
 const router = Router();
 
-router.get("/stats", requireAuth, requireAdmin, async (_req, res) => {
+router.get("/stats", requireAuth, requireAdmin, async (_req: AuthRequest, res: Response) => {
   const [users, deposits, withdrawals, openPositions, pendingTickets] =
     await Promise.all([
       prisma.user.count(),
@@ -46,7 +47,7 @@ router.get("/stats", requireAuth, requireAdmin, async (_req, res) => {
   });
 });
 
-router.get("/users", requireAuth, requireAdmin, async (_req, res) => {
+router.get("/users", requireAuth, requireAdmin, async (_req: AuthRequest, res: Response) => {
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -62,7 +63,7 @@ router.get("/users", requireAuth, requireAdmin, async (_req, res) => {
   res.json({ users });
 });
 
-router.get("/accounts", requireAuth, requireAdmin, async (_req, res) => {
+router.get("/accounts", requireAuth, requireAdmin, async (_req: AuthRequest, res: Response) => {
   const accounts = await prisma.account.findMany({
     include: { user: { select: { id: true, fullName: true } } },
     orderBy: { createdAt: "desc" },
@@ -82,7 +83,7 @@ router.get("/accounts", requireAuth, requireAdmin, async (_req, res) => {
   });
 });
 
-router.get("/transactions", requireAuth, requireAdmin, async (req, res) => {
+router.get("/transactions", requireAuth, requireAdmin, async (req: AuthRequest, res: Response) => {
   const type = (req.query.type as string | undefined)?.toUpperCase();
   const whereClause = type && type !== "ALL" ? { type: type as "DEPOSIT" | "WITHDRAWAL" | "TRADE" } : {};
 
@@ -115,7 +116,7 @@ router.get("/transactions", requireAuth, requireAdmin, async (req, res) => {
   });
 });
 
-router.get("/trades", requireAuth, requireAdmin, async (_req, res) => {
+router.get("/trades", requireAuth, requireAdmin, async (_req: AuthRequest, res: Response) => {
   const positions = await prisma.position.findMany({
     include: { account: { include: { user: { select: { id: true, fullName: true } } } } },
     orderBy: { openedAt: "desc" },
@@ -140,7 +141,7 @@ router.get("/trades", requireAuth, requireAdmin, async (_req, res) => {
   });
 });
 
-router.get("/support", requireAuth, requireAdmin, async (_req, res) => {
+router.get("/support", requireAuth, requireAdmin, async (_req: AuthRequest, res: Response) => {
   const tickets = await prisma.supportTicket.findMany({
     include: { user: { select: { id: true, fullName: true } } },
     orderBy: { createdAt: "desc" },
@@ -179,7 +180,7 @@ router.patch('/support/:id', requireAuth, requireAdmin, async (req: AuthRequest,
   try {
     const ticket = await prisma.supportTicket.update({
       where: { id },
-      data: { status: normalized as any },
+      data: { status: normalized as "OPEN" | "RESOLVED" | "CLOSED" },
     });
     res.json({
       ticket: {
@@ -227,7 +228,7 @@ router.delete("/accounts/:id", requireAuth, requireAdmin, async (req: AuthReques
   }
 });
 
-router.post("/users", requireAuth, requireAdmin, async (req, res) => {
+router.post("/users", requireAuth, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { fullName, email, password, phone, role } = req.body as {
       fullName?: string;
@@ -272,7 +273,7 @@ router.post("/users", requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-router.post('/accounts', requireAuth, requireAdmin, async (req, res) => {
+router.post('/accounts', requireAuth, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { userId, type = 'DEMO', balance = 0, currency = 'USD' } = req.body as {
       userId?: string;
@@ -293,7 +294,7 @@ router.post('/accounts', requireAuth, requireAdmin, async (req, res) => {
     }
 
     const account = await prisma.account.create({
-      data: { userId, type: type as any, balance: balance as any, currency },
+      data: { userId, type: type as "DEMO" | "LIVE", balance: new Decimal(balance), currency },
     });
 
     res.status(201).json({ account: { id: account.id, type: account.type, balance: Number(account.balance), currency: account.currency, user: { id: user.id, fullName: user.fullName } } });
