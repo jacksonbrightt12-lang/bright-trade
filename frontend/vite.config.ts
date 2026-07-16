@@ -17,7 +17,23 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 5173,
+    host: true,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: process.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000',
+        ws: true,
+      },
+    },
+  },
   build: {
+    outDir: 'dist',
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks(id: string) {
