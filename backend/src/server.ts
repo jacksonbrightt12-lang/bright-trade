@@ -1,9 +1,18 @@
+import path from "node:path";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-dotenv.config({ path: "../.env" });
-dotenv.config();
+for (const envPath of [
+  path.resolve(__dirname, ".env"),
+  path.resolve(__dirname, "..", ".env"),
+  path.resolve(process.cwd(), ".env"),
+]) {
+  dotenv.config({ path: envPath });
+}
+
+process.env.DATABASE_URL ??= "postgresql://postgres:postgres@localhost:5432/brighttrade?schema=public";
+process.env.JWT_SECRET ??= "dev-secret-key-for-development";
 
 const PORT = process.env.PORT || 5000;
 
