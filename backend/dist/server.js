@@ -3,11 +3,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const node_path_1 = __importDefault(require("node:path"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
-dotenv_1.default.config({ path: "../.env" });
-dotenv_1.default.config();
+for (const envPath of [
+    node_path_1.default.resolve(__dirname, ".env"),
+    node_path_1.default.resolve(__dirname, "..", ".env"),
+    node_path_1.default.resolve(process.cwd(), ".env"),
+]) {
+    dotenv_1.default.config({ path: envPath });
+}
+process.env.DATABASE_URL ??= "postgresql://postgres:postgres@localhost:5432/brighttrade?schema=public";
+process.env.JWT_SECRET ??= "dev-secret-key-for-development";
 const PORT = process.env.PORT || 5000;
 const app_1 = __importDefault(require("./app"));
 const prisma_1 = require("./lib/prisma");

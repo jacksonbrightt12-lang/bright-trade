@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
 const client_1 = require("@prisma/client");
 const adapter_pg_1 = require("@prisma/adapter-pg");
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/brighttrade?schema=public";
 const adapter = connectionString ? new adapter_pg_1.PrismaPg(connectionString) : undefined;
 const globalForPrisma = globalThis;
 exports.prisma = globalForPrisma.prisma ??
