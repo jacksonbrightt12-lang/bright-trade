@@ -22,11 +22,24 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function readStoredJson<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null;
+
+  const stored = window.localStorage.getItem(key);
+  if (!stored || stored === 'undefined' || stored === 'null') {
+    return null;
+  }
+
+  try {
+    return JSON.parse(stored) as T;
+  } catch {
+    window.localStorage.removeItem(key);
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('bt_user');
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState<User | null>(() => readStoredJson<User>('bt_user'));
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('bt_token'));
   const [isLoading, setIsLoading] = useState(true);
 
