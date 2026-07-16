@@ -27,9 +27,16 @@ async function bootstrap() {
         await (0, priceEngine_1.ensureInstruments)();
         console.log("Market instruments ready");
         const httpServer = (0, http_1.createServer)(app_1.default);
+        // Build Socket.io CORS origins from environment or use defaults for development
+        const socketCorsOrigins = process.env.CORS_ORIGINS
+            ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+            : ["http://localhost:5173", "http://127.0.0.1:5173"];
+        if (process.env.FRONTEND_URL) {
+            socketCorsOrigins.push(process.env.FRONTEND_URL);
+        }
         const io = new socket_io_1.Server(httpServer, {
             cors: {
-                origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+                origin: socketCorsOrigins,
                 methods: ["GET", "POST"],
             },
         });
