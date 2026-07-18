@@ -6,6 +6,15 @@ services:
     branch: main
     docker:
       dockerfilePath: backend/dockerfile
+    # Environment variables can be set in Render's dashboard for secrets like ADMIN_PASSWORD.
+    # The following are non-sensitive defaults/placeholders. Replace or set securely in Render.
+    envVars:
+      - key: ADMIN_EMAIL
+        value: admin@example.com
+      - key: ADMIN_FULLNAME
+        value: "Site Administrator"
+      - key: ADMIN_PASSWORD
+        value: "" # Set securely in Render dashboard; leave blank here
 
   - type: web
     name: brighttrade-frontend

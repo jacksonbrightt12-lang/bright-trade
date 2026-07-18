@@ -48,6 +48,10 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: brighttrade
+      # Admin seeding for local development
+      ADMIN_EMAIL: admin@brighttrade.local
+      ADMIN_PASSWORD: AdminPass123!
+      ADMIN_FULLNAME: "Site Administrator"
 
     networks:
       - brighttrade-network

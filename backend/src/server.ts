@@ -19,11 +19,46 @@ const PORT = process.env.PORT || 5000;
 import app from "./app";
 import { prisma } from "./lib/prisma";
 import { ensureInstruments, startPriceEngine, getLiveCandleUpdate } from "./services/priceEngine";
+import { hashPassword, generateReferralCode } from "./lib/auth";
 
 async function bootstrap() {
   try {
     await prisma.$connect();
     console.log("Database connected");
+
+    // Seed admin user when environment provides credentials
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      const adminFullName = process.env.ADMIN_FULLNAME ?? "Administrator";
+
+      if (adminEmail && adminPassword) {
+        const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
+        const passwordHash = await hashPassword(adminPassword);
+        if (!existing) {
+          await prisma.user.create({
+            data: {
+              email: adminEmail,
+              fullName: adminFullName,
+              passwordHash,
+              isVerified: true,
+              role: "ADMIN",
+              referralCode: generateReferralCode(),
+              accounts: { create: [{ type: "LIVE", balance: 0 }] },
+            },
+          });
+          console.log("Admin user created:", adminEmail);
+        } else {
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { role: "ADMIN", isVerified: true, passwordHash },
+          });
+          console.log("Admin user updated:", adminEmail);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to seed admin user:", err);
+    }
 
     await ensureInstruments();
     console.log("Market instruments ready");
