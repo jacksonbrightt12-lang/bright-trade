@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import PageLoader from '../components/ui/PageLoader';
+import TradingChart from '../components/charts/TradingChart';
 import { useCandles, useMarket } from '../hooks/useApi';
 import { useMarketSocket } from '../hooks/useMarketSocket';
-import { formatChange, formatPrice, formatSymbol } from '../utils/format';
+import { formatChange, formatPrice, formatSymbol, getPriceDecimals } from '../utils/format';
 import './pages.css';
 
 function getTimeframeDurationMs(timeframe: string) {
@@ -60,164 +61,6 @@ function applyLivePriceToCandles(
   };
 
   return [...updated.slice(1), newCandle];
-}
-
-function CandlestickChart({
-  data,
-}: {
-  data: Array<{
-    timestamp: number;
-    time: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-  }>;
-}) {
-  const width = 900;
-  const height = 480;
-  const padding = 54;
-  const values = data.flatMap((point) => [point.high, point.low, point.open, point.close]);
-  const maxPrice = Math.max(...values, 1);
-  const minPrice = Math.min(...values, 0);
-  const extraPadding = Math.max((maxPrice - minPrice) * 0.08, 0.0001);
-  const paddedMax = maxPrice + extraPadding;
-  const paddedMin = minPrice - extraPadding;
-  const priceRange = Math.max(paddedMax - paddedMin, 0.0006);
-  const candleGap = (width - padding * 2) / Math.max(data.length, 1);
-  const candleWidth = Math.min(52, Math.max(14, candleGap * 0.65));
-  const wickStrokeWidth = 1.6;
-  const minBodyHeight = 8;
-  const yAxisTicks = 5;
-  const latestPrice = data[data.length - 1]?.close;
-
-  const yPos = (price: number) => {
-    const ratio = (paddedMax - price) / priceRange;
-    return padding + ratio * (height - padding * 2);
-  };
-
-  const yLabels = Array.from({ length: yAxisTicks }, (_, index) => {
-    const value = paddedMax - (priceRange / (yAxisTicks - 1)) * index;
-    return {
-      value,
-      y: padding + ((height - padding * 2) / (yAxisTicks - 1)) * index,
-    };
-  });
-
-  const labelEvery = Math.max(1, Math.floor(data.length / 8));
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="candlestick-chart" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="chartBackground" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0f1624" stopOpacity="0.96" />
-          <stop offset="100%" stopColor="#0b111b" stopOpacity="0.98" />
-        </linearGradient>
-      </defs>
-
-      <rect x={padding} y={padding} width={width - padding * 2} height={height - padding * 2} rx={22} fill="url(#chartBackground)" />
-
-      {yLabels.map((label, index) => (
-        <g key={`y-label-${index}`}>
-          <line
-            x1={padding + 16}
-            x2={width - padding - 16}
-            y1={label.y}
-            y2={label.y}
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth={1}
-            strokeDasharray="4 6"
-          />
-          <text x={padding - 10} y={label.y + 4} textAnchor="end" fill="#9aa4b2" fontSize={11} fontFamily="Inter, sans-serif">
-            {label.value.toFixed(5)}
-          </text>
-        </g>
-      ))}
-
-      {latestPrice != null && (
-        <g>
-          <line
-            x1={padding + 16}
-            x2={width - padding - 16}
-            y1={yPos(latestPrice)}
-            y2={yPos(latestPrice)}
-            stroke="#7c8bff"
-            strokeWidth={1}
-            strokeDasharray="3 5"
-            opacity={0.85}
-          />
-          <rect
-            x={width - padding - 82}
-            y={yPos(latestPrice) - 14}
-            width={70}
-            height={24}
-            rx={12}
-            fill="rgba(15, 23, 40, 0.92)"
-          />
-          <text x={width - padding - 18} y={yPos(latestPrice) + 6} textAnchor="end" fill="#eef3ff" fontSize={11} fontFamily="Inter, sans-serif">
-            {latestPrice.toFixed(5)}
-          </text>
-        </g>
-      )}
-
-      {data.map((point, index) => {
-        const centerX = padding + index * candleGap + candleGap / 2;
-        const openY = yPos(point.open);
-        const closeY = yPos(point.close);
-        const highY = yPos(point.high);
-        const lowY = yPos(point.low);
-        const isBull = point.close >= point.open;
-        const rawHeight = Math.abs(openY - closeY);
-        const candleHeight = Math.max(rawHeight, minBodyHeight);
-        const topY = Math.min(openY, closeY) - Math.max(0, (candleHeight - rawHeight) / 2);
-        const bodyFill = isBull ? '#13d789' : '#ff6467';
-        const bodyStroke = isBull ? '#00ff9a' : '#ff9aa0';
-
-        return (
-          <g key={`${point.timestamp}-${index}`}>
-            <line
-              x1={centerX}
-              x2={centerX}
-              y1={highY}
-              y2={lowY}
-              stroke={bodyFill}
-              strokeWidth={wickStrokeWidth}
-              strokeLinecap="round"
-              opacity={0.9}
-            />
-            <rect
-              x={centerX - candleWidth / 2}
-              y={topY}
-              width={candleWidth}
-              height={candleHeight}
-              fill={isBull ? 'rgba(19, 215, 137, 0.86)' : 'rgba(255, 100, 103, 0.92)'}
-              stroke={bodyStroke}
-              strokeWidth={1.2}
-              rx={3}
-            />
-          </g>
-        );
-      })}
-
-      {data.map((point, index) => {
-        if (index % labelEvery !== 0) return null;
-        const centerX = padding + index * candleGap + candleGap / 2;
-        return (
-          <text
-            key={`x-label-${point.timestamp}`}
-            x={centerX}
-            y={height - padding + 20}
-            textAnchor="middle"
-            fill="#7a8db7"
-            fontSize={11}
-            fontFamily="Inter, sans-serif"
-          >
-            {point.time}
-          </text>
-        );
-      })}
-    </svg>
-  );
 }
 
 export default function Charts() {
@@ -344,7 +187,12 @@ export default function Charts() {
 
           <div className="chart-wrapper">
             {chartData.length > 0 ? (
-              <CandlestickChart data={chartData} />
+              <TradingChart
+                data={chartData}
+                symbol={symbol}
+                timeframe={selectedTimeframe}
+                priceDecimals={getPriceDecimals(symbol)}
+              />
             ) : (
               <p className="empty-state">No chart data available</p>
             )}

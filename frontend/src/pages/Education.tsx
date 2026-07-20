@@ -1,5 +1,13 @@
-import { useMemo, useState } from 'react';
-import { FiBookOpen, FiClock, FiPlayCircle, FiZap } from 'react-icons/fi';
+import { useMemo, useState, type ComponentType } from 'react';
+import {
+  FiBookOpen,
+  FiClock,
+  FiFileText,
+  FiLink,
+  FiPlayCircle,
+  FiTrendingUp,
+  FiZap,
+} from 'react-icons/fi';
 import PageLoader from '../components/ui/PageLoader';
 import { useEducation } from '../hooks/useApi';
 import './pages.css';
@@ -11,6 +19,19 @@ const resourceLabels: Record<string, string> = {
   ARTICLE: 'Article',
   DOC: 'Document',
 };
+
+const resourceIcons: Record<string, ComponentType<{ size?: number }>> = {
+  PDF: FiFileText,
+  VIDEO: FiPlayCircle,
+  LINK: FiLink,
+  ARTICLE: FiBookOpen,
+  DOC: FiFileText,
+};
+
+function ResourceIcon({ resourceType }: { resourceType: string }) {
+  const Icon = resourceIcons[resourceType] ?? FiTrendingUp;
+  return <Icon size={28} />;
+}
 
 const levelOptions = ['ALL', 'Beginner', 'Intermediate', 'Advanced', 'All Levels'];
 const typeOptions = ['ALL', 'ARTICLE', 'PDF', 'VIDEO', 'DOC', 'LINK'];
@@ -95,6 +116,9 @@ export default function Education() {
                   {featuredCourses.map((course) => (
                     <article key={course.id} className="course-card course-card-featured">
                       <div className="course-thumb">
+                        <div className="course-thumb-icon">
+                          <ResourceIcon resourceType={course.resourceType} />
+                        </div>
                         <div className="course-thumb-badge">{resourceLabels[course.resourceType] ?? 'Resource'}</div>
                       </div>
                       <div className="course-body">
@@ -135,6 +159,9 @@ export default function Education() {
                 ).map((course) => (
                   <article key={course.id} className="course-card">
                     <div className="course-thumb course-thumb-compact">
+                      <div className="course-thumb-icon">
+                        <ResourceIcon resourceType={course.resourceType} />
+                      </div>
                       <div className="course-thumb-badge">{resourceLabels[course.resourceType] ?? 'Resource'}</div>
                     </div>
                     <div className="course-body">

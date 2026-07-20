@@ -76,7 +76,31 @@ export default function AppLayout() {
         }`}
       >
         <div className="sidebar-brand">
-          <div className="brand-icon">📊</div>
+          <div className="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="30" height="30" fill="none">
+              <rect width="32" height="32" rx="9" fill="url(#bt-mark-grad)" />
+              <path
+                d="M7 21.5 12.5 15l4 4 8-9.5"
+                stroke="#0b0f16"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M19.5 9.5H24.5V14.5"
+                stroke="#0b0f16"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <defs>
+                <linearGradient id="bt-mark-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#00e6a1" />
+                  <stop offset="1" stopColor="#00a86b" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
           {(sidebarOpen || mobileMenuOpen) && (
             <div>
               <span className="brand-name">BrightTrade</span>
