@@ -5,12 +5,16 @@ export function formatSymbol(symbol: string): string {
   return symbol;
 }
 
-export function formatPrice(price: number, symbol?: string): string {
+export function getPriceDecimals(symbol?: string): number {
   const s = symbol?.replace('/', '') ?? '';
-  if (s.includes('JPY')) return price.toFixed(3);
-  if (s.startsWith('US') && s.length <= 5) return price.toFixed(2);
-  if (s.startsWith('XAU')) return price.toFixed(2);
-  return price.toFixed(5);
+  if (s.includes('JPY')) return 3;
+  if (s.startsWith('US') && s.length <= 5) return 2;
+  if (s.startsWith('XAU')) return 2;
+  return 5;
+}
+
+export function formatPrice(price: number, symbol?: string): string {
+  return price.toFixed(getPriceDecimals(symbol));
 }
 
 export function formatCurrency(amount: number, currency = 'USD'): string {
