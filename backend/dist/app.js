@@ -14,9 +14,32 @@ const education_routes_1 = __importDefault(require("./routes/education.routes"))
 const affiliate_routes_1 = __importDefault(require("./routes/affiliate.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
 const app = (0, express_1.default)();
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://bright-trade.onrender.com",
+    "https://www.bright-trade.onrender.com",
+];
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 app.use((0, cors_1.default)({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: (origin, callback) => {
+        if (!origin) {
+            callback(null, true);
+            return;
+        }
+        if (allowedOrigins.includes(origin) || configuredOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+        callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 204,
 }));
 app.use(express_1.default.json());
 app.get("/", (_req, res) => {

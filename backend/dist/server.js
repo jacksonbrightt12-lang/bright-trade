@@ -20,10 +20,45 @@ const PORT = process.env.PORT || 5000;
 const app_1 = __importDefault(require("./app"));
 const prisma_1 = require("./lib/prisma");
 const priceEngine_1 = require("./services/priceEngine");
+const auth_1 = require("./lib/auth");
 async function bootstrap() {
     try {
         await prisma_1.prisma.$connect();
         console.log("Database connected");
+        // Seed admin user when environment provides credentials
+        try {
+            const adminEmail = process.env.ADMIN_EMAIL;
+            const adminPassword = process.env.ADMIN_PASSWORD;
+            const adminFullName = process.env.ADMIN_FULLNAME ?? "Administrator";
+            if (adminEmail && adminPassword) {
+                const existing = await prisma_1.prisma.user.findUnique({ where: { email: adminEmail } });
+                const passwordHash = await (0, auth_1.hashPassword)(adminPassword);
+                if (!existing) {
+                    await prisma_1.prisma.user.create({
+                        data: {
+                            email: adminEmail,
+                            fullName: adminFullName,
+                            passwordHash,
+                            isVerified: true,
+                            role: "ADMIN",
+                            referralCode: (0, auth_1.generateReferralCode)(),
+                            accounts: { create: [{ type: "LIVE", balance: 0 }] },
+                        },
+                    });
+                    console.log("Admin user created:", adminEmail);
+                }
+                else {
+                    await prisma_1.prisma.user.update({
+                        where: { id: existing.id },
+                        data: { role: "ADMIN", isVerified: true, passwordHash },
+                    });
+                    console.log("Admin user updated:", adminEmail);
+                }
+            }
+        }
+        catch (err) {
+            console.error("Failed to seed admin user:", err);
+        }
         await (0, priceEngine_1.ensureInstruments)();
         console.log("Market instruments ready");
         const httpServer = (0, http_1.createServer)(app_1.default);

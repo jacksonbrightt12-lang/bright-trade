@@ -128,22 +128,87 @@ router.get("/trades", auth_1.requireAuth, auth_1.requireAdmin, async (_req, res)
 });
 router.get("/support", auth_1.requireAuth, auth_1.requireAdmin, async (_req, res) => {
     const tickets = await prisma_1.prisma.supportTicket.findMany({
-        include: { user: { select: { id: true, fullName: true } } },
-        orderBy: { createdAt: "desc" },
+        include: {
+            user: { select: { id: true, fullName: true } },
+            messages: { orderBy: { createdAt: "asc" } },
+        },
+        orderBy: { updatedAt: "desc" },
     });
     res.json({
-        tickets: tickets.map((ticket) => ({
+        conversations: tickets.map((ticket) => ({
             id: ticket.id,
             subject: ticket.subject,
-            message: ticket.message,
             status: ticket.status.toLowerCase().replace("_", " "),
             createdAt: ticket.createdAt,
+            updatedAt: ticket.updatedAt,
+            lastMessage: ticket.messages.at(-1)?.content ?? ticket.message,
+            unreadCount: ticket.messages.filter((message) => message.sender === "USER" && !message.isRead).length,
             user: {
                 id: ticket.user.id,
                 fullName: ticket.user.fullName,
             },
+            messages: ticket.messages.map((message) => ({
+                id: message.id,
+                sender: message.sender.toLowerCase(),
+                content: message.content,
+                createdAt: message.createdAt,
+                isRead: message.isRead,
+            })),
         })),
     });
+});
+router.post('/support/:id/messages', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
+    const ticketId = typeof req.params.id === 'string' ? req.params.id : req.params.id[0];
+    const { message } = req.body;
+    if (!message?.trim()) {
+        res.status(400).json({ error: 'Message is required' });
+        return;
+    }
+    const ticket = await prisma_1.prisma.supportTicket.findUnique({
+        where: { id: ticketId },
+        include: { messages: { orderBy: { createdAt: 'asc' } } },
+    });
+    if (!ticket) {
+        res.status(404).json({ error: 'Conversation not found' });
+        return;
+    }
+    const created = await prisma_1.prisma.supportMessage.create({
+        data: {
+            ticketId,
+            sender: 'ADMIN',
+            content: message.trim(),
+        },
+    });
+    await prisma_1.prisma.supportMessage.updateMany({
+        where: { ticketId, sender: 'USER', isRead: false },
+        data: { isRead: true },
+    });
+    await prisma_1.prisma.supportTicket.update({
+        where: { id: ticketId },
+        data: { message: message.trim(), updatedAt: new Date() },
+    });
+    res.status(201).json({
+        message: {
+            id: created.id,
+            sender: 'admin',
+            content: created.content,
+            createdAt: created.createdAt,
+            isRead: created.isRead,
+        },
+    });
+});
+router.patch('/support/:id/read', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
+    const ticketId = typeof req.params.id === 'string' ? req.params.id : req.params.id[0];
+    const ticket = await prisma_1.prisma.supportTicket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+        res.status(404).json({ error: 'Conversation not found' });
+        return;
+    }
+    await prisma_1.prisma.supportMessage.updateMany({
+        where: { ticketId, sender: 'USER', isRead: false },
+        data: { isRead: true },
+    });
+    res.json({ success: true });
 });
 router.patch('/support/:id', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
     const id = typeof req.params.id === 'string' ? req.params.id : req.params.id[0];
