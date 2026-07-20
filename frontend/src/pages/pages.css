@@ -1392,11 +1392,18 @@ body {
   .admin-page-container { grid-template-columns: 1fr; }
   .admin-stats-row { grid-template-columns: 1fr 1fr; }
   .admin-dashboard-grid { grid-template-columns: 1fr; }
+  .support-chat-shell { grid-template-columns: 1fr; }
+  .support-sidebar { max-height: none; }
 }
 
 @media (max-width: 760px) {
   .admin-stats-row { grid-template-columns: 1fr; }
   .admin-main { padding: 20px; }
+  .support-chat-shell { padding: 12px; }
+  .support-chat-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .support-chat-input { flex-direction: column; }
+  .support-chat-input button { width: 100%; }
+  .support-bubble { max-width: 88%; }
 }
 
 .admin-topbar {

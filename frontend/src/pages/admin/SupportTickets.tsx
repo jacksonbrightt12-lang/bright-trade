@@ -108,7 +108,13 @@ export default function AdminSupportTickets() {
               onClick={() => setActiveConversationId(ticket.id)}
             >
               <div className="admin-support-thread-top">
-                <strong>{ticket.user?.fullName ?? 'Unknown user'}</strong>
+                <div className="admin-support-user">
+                  <div className="admin-support-avatar">{(ticket.user?.fullName ?? 'Unknown user').split(' ').map((part: string) => part[0]).join('').slice(0, 2).toUpperCase()}</div>
+                  <div>
+                    <strong>{ticket.user?.fullName ?? 'Unknown user'}</strong>
+                    <span className="admin-support-status">Online</span>
+                  </div>
+                </div>
                 {ticket.unreadCount > 0 ? <span className="support-badge">{ticket.unreadCount}</span> : null}
               </div>
               <p>{ticket.subject}</p>
@@ -121,9 +127,12 @@ export default function AdminSupportTickets() {
           {activeConversation ? (
             <>
               <div className="admin-support-chat-header">
-                <div>
-                  <h3>{activeConversation.subject}</h3>
-                  <p>{activeConversation.user?.fullName ?? 'User'}</p>
+                <div className="admin-support-user">
+                  <div className="admin-support-avatar large">{(activeConversation.user?.fullName ?? 'User').split(' ').map((part: string) => part[0]).join('').slice(0, 2).toUpperCase()}</div>
+                  <div>
+                    <h3>{activeConversation.subject}</h3>
+                    <p>{activeConversation.user?.fullName ?? 'User'} • Online</p>
+                  </div>
                 </div>
                 <div className="admin-support-actions">
                   {STATUS_ACTIONS.map((status) => (

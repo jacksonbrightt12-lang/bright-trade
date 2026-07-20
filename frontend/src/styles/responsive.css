@@ -99,6 +99,28 @@
 }
 
 @media (max-width: 480px) {
+  .page-shell {
+    padding: 0 8px;
+  }
+
+  .glass-card {
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .content-header {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .content-header h2 {
+    font-size: 22px;
+  }
+
+  .support-chat-shell,
+  .admin-support-layout {
+    gap: 12px;
+  }
   .market-watch-tabs,
   .positions-tabs,
   .history-tabs {
