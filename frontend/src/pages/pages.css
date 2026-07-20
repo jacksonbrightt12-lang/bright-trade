@@ -188,6 +188,17 @@ body {
   min-width: 100px;
 }
 
+.market-price,
+.current-price,
+.trade-price-info .current-price,
+.price-info .price,
+.price-info .change,
+.trade-price-info .price-change {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
 .market-price {
   font-weight: 700;
   color: #fff;
@@ -286,6 +297,12 @@ body {
   justify-content: space-between;
   color: #c7d0da;
   font-size: 13px;
+}
+
+.detail-row .value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
 .detail-row.highlight {
@@ -470,6 +487,8 @@ body {
 .margin-value {
   color: #eef3ff;
   font-weight: 700;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .sl-tp-row {
@@ -552,6 +571,8 @@ body {
   margin-top: 4px;
   font-size: 16px;
   font-weight: 800;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .btn-sell {
