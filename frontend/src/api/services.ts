@@ -73,9 +73,12 @@ export const tradesApi = {
 };
 
 export const supportApi = {
-  list: () => api.get<{ tickets: SupportTicket[] }>('/support'),
+  list: () => api.get<{ conversations: SupportTicket[] }>('/support'),
   create: (subject: string, message: string) =>
     api.post('/support', { subject, message }),
+  sendMessage: (id: string, message: string) =>
+    api.post(`/support/${id}/messages`, { message }),
+  markRead: (id: string) => api.patch(`/support/${id}/read`),
 };
 
 export const educationApi = {
@@ -94,7 +97,7 @@ export const adminApi = {
   accounts: () => api.get('/admin/accounts'),
   transactions: (type = 'all') => api.get('/admin/transactions', { params: { type } }),
   trades: () => api.get('/admin/trades'),
-  support: () => api.get('/admin/support'),
+  support: () => api.get<{ conversations: SupportTicket[] }>('/admin/support'),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
   deleteAccount: (id: string) => api.delete(`/admin/accounts/${id}`),
   createUser: (data: { fullName: string; email: string; password: string; phone?: string; role?: string }) =>
@@ -104,4 +107,7 @@ export const adminApi = {
   updateTicketStatus: (id: string, status: string) =>
     api.patch(`/admin/support/${id}`, { status }),
   deleteSupportTicket: (id: string) => api.delete(`/admin/support/${id}`),
+  adminSendMessage: (id: string, message: string) =>
+    api.post(`/admin/support/${id}/messages`, { message }),
+  adminMarkRead: (id: string) => api.patch(`/admin/support/${id}/read`),
 };

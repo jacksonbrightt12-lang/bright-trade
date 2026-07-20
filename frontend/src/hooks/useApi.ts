@@ -177,8 +177,10 @@ export function useSupportTickets() {
     queryKey: ['support'],
     queryFn: async () => {
       const { data } = await supportApi.list();
-      return data.tickets;
+      return data.conversations ?? [];
     },
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -237,8 +239,10 @@ export function useAdminSupport() {
     queryKey: ['admin', 'support'],
     queryFn: async () => {
       const { data } = await adminApi.support();
-      return data.tickets;
+      return data.conversations ?? [];
     },
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -386,6 +390,26 @@ export function useCreateTicket() {
       supportApi.create(subject, message),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['support'] });
+    },
+  });
+}
+
+export function useSendSupportMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, message }: { id: string; message: string }) => supportApi.sendMessage(id, message),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['support'] });
+    },
+  });
+}
+
+export function useAdminSendSupportMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, message }: { id: string; message: string }) => adminApi.adminSendMessage(id, message),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'support'] });
     },
   });
 }

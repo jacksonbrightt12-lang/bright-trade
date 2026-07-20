@@ -88,12 +88,27 @@ export interface CandleUpdate {
   volume: number;
 }
 
+export interface SupportMessage {
+  id: string;
+  sender: string;
+  content: string;
+  createdAt: string;
+  isRead?: boolean;
+}
+
 export interface SupportTicket {
   id: string;
   subject: string;
-  message: string;
   status: string;
   createdAt: string;
+  updatedAt?: string;
+  lastMessage?: string;
+  messages?: SupportMessage[];
+  unreadCount?: number;
+  user?: {
+    id: string;
+    fullName: string;
+  };
 }
 
 export interface EducationCourse {
